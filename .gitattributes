@@ -1,0 +1,11 @@
+# 默认按文本处理，仓库内统一 LF，检出时交给各平台
+* text=auto eol=lf
+
+# 二进制文件不做换行转换与 diff 猜测
+*.jar binary
+*.class binary
+*.svg binary
+
+# Windows 脚本按 CRLF 检出
+*.ps1 text eol=crlf
+*.bat text eol=crlf

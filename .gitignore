@@ -1,0 +1,18 @@
+# 依赖
+node_modules/
+
+# DSH 运行时临时目录
+.dsh-tmp/
+
+# 日志与临时文件
+*.log
+*.tmp
+*.bak
+*~
+
+# 编辑器 / 操作系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

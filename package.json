@@ -1,0 +1,53 @@
+{
+  "name": "@local/dsh-plsqlstudio-preset",
+  "version": "2.57.0",
+  "private": true,
+  "type": "module",
+  "description": "PLSQL Studio：Oracle / MySQL 到瀚高 HGDB V9 的转换工作台。打开先进入产品总览（转换链路、指标、趋势与最近任务），再进入 SQL 工作台；自动识别 SQL 文本或目录，默认本地规则快速转换，复杂 PL/SQL 可交给智能体深度转换。",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qiuzhenchao/plsqlstudio.git"
+  },
+  "homepage": "https://github.com/qiuzhenchao/plsqlstudio#readme",
+  "keywords": [
+    "dsh-plugin",
+    "oracle",
+    "mysql",
+    "hgdb",
+    "highgo",
+    "postgresql",
+    "sql-converter"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "docs",
+    "icon.svg",
+    "skills",
+    "tools",
+    "drivers",
+    "sql",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  }
+}

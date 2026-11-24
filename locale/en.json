@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "PLSQL Studio",
+    "description": "PLSQL Studio converts Oracle and MySQL functions, procedures, packages, views, triggers, tables and queries to HGDB V9 syntax. Tabs switch between Overview, Task center, Task detail, and Connections, with dark/light themes. Overview shows the conversion pipeline and trends; Task center tracks fetch/convert/execute progress per task; Task detail provides source-to-target editors and conversion results; Connections manages source (Oracle / MySQL) and target (HGDB-V9-PostgreSQL / HGDB-V9-Oracle / HGDB-V9-MySQL) profiles.",
+    "detail": "docs/DETAIL.md"
+  }
+}
