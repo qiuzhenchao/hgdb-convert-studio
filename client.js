@@ -2037,7 +2037,7 @@ window.__ModuleLoader__.load({
           : []),
         '5. 标识符大小写：schema 与对象名一律输出小写、不加双引号（兼容模式也一样：目标 schema 由执行器建为小写；带引号的大写名只在 Oracle 兼容实例上碰巧能匹配到小写对象，PG 形态目标会报 schema "TEST" does not exist）；只有保留字或必须区分大小写时才加双引号，且全链路保持一致。',
         '6. 输出完整可执行 SQL，不要用省略号或伪代码。',
-        '7. 这是单对象转换：直接给出结果，不要调用任何工具、不要读取技能文件、不要创建待办或中间文件。',
+        '7. 逐项转换输入中的全部 SQL 对象，保持原顺序：直接给出结果，不要调用任何工具、不要读取技能文件、不要创建待办或中间文件。',
         ...(!compat ? ['PG 行级触发器：输出 RETURNS trigger 的 PL/pgSQL 函数与独立的 CREATE TRIGGER ... EXECUTE FUNCTION。将 :NEW/:OLD 改为 NEW/OLD，事件谓词改用 TG_OP。函数末尾使用 IF TG_OP = \'INSERT\' OR TG_OP = \'UPDATE\' THEN RETURN NEW; ELSE RETURN OLD; END IF;。'] : []),
         ...(compat ? [
           '',
@@ -3000,10 +3000,10 @@ button.hcs-depsJump:hover { background: color-mix(in srgb, #2563eb 12%, transpar
 .hch-scroll::-webkit-scrollbar-thumb:hover { background: rgba(96, 165, 250, .42); background-clip: padding-box; }
 .hch-inner { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: none; margin: 0 auto; padding: 14px 24px 16px; }
 .hch-home .hch-scroll { display: flex; flex-direction: column; }
-.hch-home .hch-inner { flex: 1; min-height: 0; justify-content: flex-start; }
+.hch-home .hch-inner { flex: none; justify-content: flex-start; }
 .hch-home .hch-main { flex: 1 1 auto; min-height: 0; }
 .hch-home .hch-trendCard { flex: 1 1 auto; min-height: 240px; }
-.hch-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(500px, .95fr); gap: 18px; min-height: 0; padding: 28px 32px; overflow: hidden; border: 1px solid rgba(96, 165, 250, .22); border-radius: 20px; background: radial-gradient(90% 130% at 0% 0%, rgba(37, 99, 235, .28), transparent 58%), radial-gradient(70% 90% at 96% 100%, rgba(34, 211, 238, .1), transparent 60%), linear-gradient(135deg, rgba(14, 26, 50, .96), rgba(7, 13, 26, .96)); box-shadow: 0 28px 80px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .06); animation: hch-rise .55s ease backwards; }
+.hch-hero { position: relative; display: grid; flex: none; grid-template-columns: minmax(0, 1.05fr) minmax(500px, .95fr); gap: 18px; min-height: 0; padding: 28px 32px; overflow: hidden; border: 1px solid rgba(96, 165, 250, .22); border-radius: 20px; background: radial-gradient(90% 130% at 0% 0%, rgba(37, 99, 235, .28), transparent 58%), radial-gradient(70% 90% at 96% 100%, rgba(34, 211, 238, .1), transparent 60%), linear-gradient(135deg, rgba(14, 26, 50, .96), rgba(7, 13, 26, .96)); box-shadow: 0 28px 80px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .06); animation: hch-rise .55s ease backwards; }
 .hch-hero::before { content: ''; position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(rgba(126, 164, 255, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(126, 164, 255, .055) 1px, transparent 1px); background-size: 34px 34px; -webkit-mask-image: radial-gradient(120% 120% at 28% 18%, #000 0%, transparent 70%); mask-image: radial-gradient(120% 120% at 28% 18%, #000 0%, transparent 70%); pointer-events: none; }
 .hch-hero::after { content: ''; position: absolute; top: -190px; right: -150px; z-index: 0; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(34, 211, 238, .24), rgba(37, 99, 235, .08) 44%, transparent 68%); filter: blur(8px); pointer-events: none; }
 .hch-heroCopy, .hch-visual { position: relative; z-index: 1; }
@@ -4424,13 +4424,13 @@ button.hcs-depsJump:hover { background: color-mix(in srgb, #2563eb 12%, transpar
         (match, number, message) => number === undefined ? match : `RAISE EXCEPTION '%', ${message} USING ERRCODE = 'P${number.slice(-4)}';`)
       const parts = splitSql(pgBody)
       const code = parts.filter(part => part.kind === 'code').map(part => part.text).join(' ')
-      if (/\b(?:RETURN|GOTO|FORALL|BULK\s+COLLECT|RAISE_APPLICATION_ERROR|DBMS_\w+|EXECUTE\s+IMMEDIATE)\b|\b(?:INSERTING|UPDATING|DELETING)\s*\(|\bEXCEPTION\b|:(?!:|=)(?!NEW\b|OLD\b)\w+/i.test(code)) return null
+      if (/\b(?:RETURN|GOTO|FORALL|BULK\s+COLLECT|RAISE_APPLICATION_ERROR|DBMS_\w+|EXECUTE\s+IMMEDIATE)\b|\b(?:INSERTING|UPDATING|DELETING)\s*\(|\bEXCEPTION\s+WHEN\b|(?<!:):(?!:|=)(?!NEW\b|OLD\b)\w+/i.test(code)) return null
 
       const changes = [{ id: 'sql.triggerFunction', count: 1 }, { id: 'sql.triggerReturn', count: 1 }]
       let rowRefs = 0
       let eventChecks = 0
       const rewritten = parts.map(part => part.kind === 'code' ? part.text
-        .replace(/\bSELECT\s+([\w$.]+)\.NEXTVAL\s+INTO\s+(:NEW\.[\w$]+)\s+FROM\s+DUAL\s*;/gi,
+        .replace(/\bSELECT\s+([\w$.]+)\.NEXTVAL\s+INTO\s+(:NEW\.[\w$]+)(?:\s+FROM\s+DUAL)?\s*;/gi,
           (_, sequence, column) => `${column} := nextval('${sequence.toLowerCase()}');`)
         .replace(/:(NEW|OLD)\s*\./gi, (_, row) => {
           rowRefs++
@@ -4476,7 +4476,7 @@ ${disable}`,
       const masked = splitSql(source).map(part => part.kind === 'code' ? part.text : part.text.replace(/[^\r\n]/g, ' ')).join('')
       const headers = [...masked.matchAll(/(?:^|(?<=[;\n]))[ \t\r\n]*CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:NON)?EDITIONABLE\s+)?(?:(?:GLOBAL\s+TEMPORARY|UNIQUE|BITMAP|MATERIALIZED)\s+)?(?:TABLE|VIEW|SEQUENCE|INDEX|FUNCTION|PROCEDURE|TRIGGER|PACKAGE|TYPE|SYNONYM)\b/gi)]
       const starts = [0, ...headers.slice(1).map(match => match.index + match[0].search(/\bCREATE\b/i))]
-      return starts.map((start, index) => ({ sql: source.slice(start, starts[index]), start }))
+      return starts.map((start, index) => ({ sql: source.slice(start, starts[index + 1]), start }))
     }
 
     function convertLocally(source, options = {}) {
