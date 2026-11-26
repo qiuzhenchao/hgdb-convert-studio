@@ -114,4 +114,4 @@
                   headChars: 4096
                   tailChars: 1024
     - id: hgdb-convert-studio-workbench
-      name: '@local/dsh-hgdb-convert-studio-preset'
+      name: 'dsh-hgdb-convert-studio'

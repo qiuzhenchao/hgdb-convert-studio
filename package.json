@@ -1,7 +1,6 @@
 {
-  "name": "@local/dsh-hgdb-convert-studio-preset",
-  "version": "3.3.8",
-  "private": true,
+  "name": "dsh-hgdb-convert-studio",
+  "version": "3.3.9",
   "engines": {
     "dsh": ">=0.2.2-rc.5"
   },

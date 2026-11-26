@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: '@local/dsh-hgdb-convert-studio-preset',
+  id: 'dsh-hgdb-convert-studio',
   factory(require) {
     const React = require('react')
     const ReactDOM = (() => {

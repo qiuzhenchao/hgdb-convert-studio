@@ -43,7 +43,15 @@ dsh plugin --profile <profile> add "git+https://github.com/qiuzhenchao/hgdb-conv
 
 `#` 后面必须是完整的 40 位 commit SHA，分支名和短 SHA 都不被接受。插件在仓库根目录，所以不需要 `&path:`。
 
-### 方式三：插件市场
+### 方式三：npm（已发布后可用）
+
+包名 `dsh-hgdb-convert-studio`，预构建安装不需要 `allowBuilds` 构建授权：
+
+```bash
+dsh plugin --profile <profile> add dsh-hgdb-convert-studio@3.3.9
+```
+
+### 方式四：插件市场
 
 本插件正在提交至 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 精选列表；收录后可在 DSH 插件市场（dsh-market）或 **插件 → 发现** 里搜索「HGDB」「Oracle 转换」找到。收录生效前用方式一或方式二安装。
 
