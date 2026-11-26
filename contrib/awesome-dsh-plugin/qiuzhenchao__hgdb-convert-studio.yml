@@ -1,0 +1,7 @@
+url: https://github.com/qiuzhenchao/hgdb-convert-studio
+name: qiuzhenchao/hgdb-convert-studio
+category: tools
+icon: https://raw.githubusercontent.com/qiuzhenchao/hgdb-convert-studio/main/assets/icon-180.png
+description:
+  en: 'Converts Oracle, MySQL and SQL Server routines, packages, views and triggers into executable HighGo HGDB V9 SQL, with local rules and agent-assisted rewriting.'
+  zh: '把 Oracle、MySQL、SQL Server 的函数、存储过程、包、视图与触发器转换为瀚高 HGDB V9 可执行 SQL，支持本地规则与智能体改写。'

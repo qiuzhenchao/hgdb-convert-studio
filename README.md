@@ -14,6 +14,10 @@ HGDB Convert Studio —— Oracle / MySQL / SQL Server 到瀚高 HGDB V9 的转�
 
 ## 安装
 
+**宿主版本要求**：DSH `>= 0.2.2-rc.5`（见 `package.json` 的 `engines.dsh`）。低于此版本的宿主会在安装时被拦下。
+
+### 方式一：本地目录（离线可用，最稳）
+
 1. 克隆本仓库到任意目录：
 
    ```bash
@@ -28,6 +32,30 @@ HGDB Convert Studio —— Oracle / MySQL / SQL Server 到瀚高 HGDB V9 的转�
    - **设置 → HGDB Convert Studio** 保留同一套表单的快捷入口。
 
 本 bundle 链接安装（link），修改 `skills/` 下的规则文件后新会话立即生效，无需重装。
+
+### 方式二：Git 直装（锁定 commit）
+
+适合能访问 `github.com` 的机器，不需要 npm：
+
+```bash
+dsh plugin --profile <profile> add "git+https://github.com/qiuzhenchao/hgdb-convert-studio.git#<40 位 commit SHA>"
+```
+
+`#` 后面必须是完整的 40 位 commit SHA，分支名和短 SHA 都不被接受。插件在仓库根目录，所以不需要 `&path:`。
+
+### 方式三：插件市场
+
+本插件已提交至 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 精选列表；合并后可在 DSH 插件市场（dsh-market）或 **插件 → 发现** 里搜索「HGDB」「Oracle 转换」找到。
+
+市场之外的机器也可以把这份目录当作索引源，在 **插件 → 发现 → 索引源** 添加：
+
+```text
+https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json
+```
+
+### 内网分发
+
+内网机器访问不了 GitHub 时，把仓库打成 zip 传过去，解压后用**方式一**安装即可：`drivers/` 里的 JDBC 驱动已随仓库分发，不需要联网拉依赖。
 
 ## 产品总览首页
 

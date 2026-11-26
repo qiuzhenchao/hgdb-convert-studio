@@ -1,7 +1,10 @@
 {
   "name": "@local/dsh-hgdb-convert-studio-preset",
-  "version": "3.3.7",
+  "version": "3.3.8",
   "private": true,
+  "engines": {
+    "dsh": ">=0.2.2-rc.5"
+  },
   "type": "module",
   "description": "HGDB Convert Studio：Oracle / MySQL / SQL Server 到瀚高 HGDB V9 的转换工作台。打开先进入产品总览（转换链路、指标、趋势与最近任务），再进入 SQL 工作台；自动识别 SQL 文本或目录，默认本地规则快速转换，复杂例程可交给智能体深度转换。",
   "license": "MIT",
@@ -33,6 +36,7 @@
     "locale/*.json",
     "docs",
     "icon.svg",
+    "assets",
     "skills",
     "tools",
     "drivers",
