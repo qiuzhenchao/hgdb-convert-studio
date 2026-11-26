@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="3 1 30 34" role="img" aria-label="PLSQL Studio">
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" role="img" aria-label="HGDB Convert Studio">
   <defs>
-    <linearGradient id="ps-db" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#38BDF8"/>
-      <stop offset=".55" stop-color="#2563EB"/>
-      <stop offset="1" stop-color="#1E40AF"/>
+    <linearGradient id="db-fill" x2="0%" y2="100%">
+      <stop stop-color="#0099F7"/>
+      <stop offset="100%" stop-color="#283BCF"/>
     </linearGradient>
-    <marker id="ps-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.4" markerHeight="4.4" orient="auto-start-reverse">
-      <path d="M0 0L10 5L0 10Z" fill="#FFFFFF"/>
-    </marker>
+    <path id="db-outline" d="M18 1.2c7.5 0 13.5 2.3 13.5 5.2v22.8c0 3.1-6 5.6-13.5 5.6S4.5 32.3 4.5 29.2V6.4c0-2.9 6-5.2 13.5-5.2Z"/>
+    <clipPath id="db-clip">
+      <use href="#db-outline"/>
+    </clipPath>
   </defs>
-  <g transform="translate(18 18) scale(1.22) translate(-18 -18)">
-    <path d="M7 9c0 2.2 4.9 4 11 4s11-1.8 11-4v18c0 2.2-4.9 4-11 4S7 29.2 7 27V9Z" fill="url(#ps-db)"/>
-    <ellipse cx="18" cy="9" rx="11" ry="4" fill="#7DD3FC"/>
-    <ellipse cx="18" cy="9" rx="11" ry="4" fill="none" stroke="#FFFFFF" stroke-opacity=".45" stroke-width=".8"/>
-    <path d="M12.6 18.6a5.4 5.4 0 0 1 10.8 0" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ps-arrow)"/>
-    <path d="M23.4 18.6a5.4 5.4 0 0 1-10.8 0" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ps-arrow)"/>
+  <use href="#db-outline" fill="url(#db-fill)"/>
+  <g clip-path="url(#db-clip)" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 6.4c0 2.9 6 5.2 13.5 5.2s13.5-2.3 13.5-5.2" stroke-width="1.15"/>
+    <path d="M11.7 19.8a6.5 6.5 0 0 1 11.5-2.4" stroke-width="2"/>
+    <path d="M24.3 23.2a6.5 6.5 0 0 1-11.5 2.4" stroke-width="2"/>
+    <path d="M25.5 19.9l-6-1.2 4.3-4.4Z M10.5 23.1l6 1.2-4.3 4.4Z" fill="#FFFFFF" stroke="none"/>
   </g>
 </svg>

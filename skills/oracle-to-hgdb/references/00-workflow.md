@@ -47,7 +47,8 @@
 
 - 一个对象一个文件；文件名用 `对象类型_对象名.sql`（全小写），例如 `function_f_get_amt.sql`、`package_pkg_order.sql`。
 - 源文件内有多个对象时，按对象拆开，保留原文件路径映射在报告里。
-- 对象名：默认小写、不加引号；保留字或必须区分大小写时才加双引号，并全链路一致（定义、调用、权限、视图、触发器、应用 SQL）。
+- 对象名：默认小写、不加引号，兼容模式也一样。目标 schema 由执行器建为小写；Oracle 兼容实例（`ivorysql_ora`）会把带引号名折成大写再大小写不敏感匹配（`"TEST"."FN_X"` 落到 `test.fn_x`，但 `"test"."FN_X"` 会报 `schema "TEST" does not exist`），PG 形态实例则 `"TEST"."FN_X"` 直接报同样的错。小写无引号在两种形态下都可用；保留字或必须区分大小写时才加双引号，并全链路一致（定义、调用、权限、视图、触发器、应用 SQL）。
+- 删除语句：函数/过程写 `DROP FUNCTION|PROCEDURE IF EXISTS 名称(输入参数类型)`，无参数写 `名称()`。同一名字在目标库常有 `number` 与 `numeric` 两套重载，不带参数会报 `42725 not unique`；参数类型是 `%TYPE` 这类无法静态确定的，才退回不带参数并在报告里标注。
 - 包转 schema 后，原 `pkg.proc` 调用改为 `pkg.proc`（同名 schema 限定）；schema 名不要与现有表/视图重名。
 - 同义词：优先改调用点；不能改调用方时用视图或 `search_path` 兜底（见 01）。
 

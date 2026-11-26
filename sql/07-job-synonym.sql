@@ -30,6 +30,6 @@ BEGIN
     start_date      => SYSTIMESTAMP,
     repeat_interval => 'FREQ=DAILY;BYHOUR=2;BYMINUTE=0',
     enabled         => FALSE,
-    comments        => 'PLSQL Studio JOB test object');
+    comments        => 'HGDB Convert Studio JOB test object');
 END;
 /

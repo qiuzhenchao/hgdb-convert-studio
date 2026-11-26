@@ -8,8 +8,11 @@ import java.util.List;
 /**
  * 列出目标库可用的 schema（模式），输出 JSON 数组。
  *
- * 用法：
- *   java -cp postgresql.jar ListSchemas --url jdbc:postgresql://host:port/db --user u --password p
+ * 支持两类目标：
+ *   PostgreSQL 协议（HGDB-V9-PostgreSQL / Oracle）：
+ *     java -cp postgresql.jar ListSchemas --url jdbc:postgresql://host:port/db --user u --password p
+ *   MySQL 协议（HGDB-V9-MySQL，schema 即数据库）：
+ *     java -cp mysql.jar ListSchemas --url jdbc:mysql://host:port/db --user u --password p
  */
 public class ListSchemas {
 

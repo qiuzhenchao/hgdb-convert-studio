@@ -9,6 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * 从 MySQL / MariaDB 源库读取对象清单与 DDL，输出一个 JSON 数组（name/type/ddl）。
@@ -64,8 +69,50 @@ public class ReadMysqlObjects {
 
         Class.forName("com.mysql.cj.jdbc.Driver");
 
+        // 网络抖动时 MySQL 会断开长连接：整轮重试一次，避免用户看到裸的 CommunicationsException
+        int attempt = 0;
+        while (true) {
+            try {
+                runOnce(url, user, pass, database, typeList, limit);
+                return;
+            } catch (Exception error) {
+                attempt++;
+                if (attempt >= 2 || !isRetryable(error)) throw error;
+                System.err.println("WARN: 与源库的连接中断，正在重试（" + attempt + "/1）");
+                try {
+                    Thread.sleep(800L);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw error;
+                }
+            }
+        }
+    }
+
+    /** 连接中断、读超时一类错误值得重试；语法/权限错误不重试。 */
+    private static boolean isRetryable(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase();
+                if (lower.contains("communications link failure")
+                    || lower.contains("connection is closed")
+                    || lower.contains("read timed out")
+                    || lower.contains("could not create connection")
+                    || lower.contains("broken pipe")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private static void runOnce(String url, String user, String pass, String database,
+                                List<String> typeList, int limit) throws Exception {
         List<String[]> objects = new ArrayList<String[]>();
-        Map<String, String> ddls = new LinkedHashMap<String, String>();
+        String[] ddls;
         try (Connection connection = DriverManager.getConnection(url, user, pass)) {
             if (typeList.contains("TABLE")) {
                 List<String[]> tables = new ArrayList<String[]>();
@@ -100,31 +147,25 @@ public class ReadMysqlObjects {
                     database, limit);
             }
 
-            int skipped = 0;
-            for (String[] object : objects) {
-                String ddl;
-                try {
-                    ddl = showCreate(connection, object[1], database, object[0]);
-                } catch (Exception error) {
-                    ddl = null;
-                    System.err.println("WARN: " + object[1] + " " + object[0] + " 读取失败: " + error.getMessage());
+            ddls = readDdls(connection, url, user, pass, database, objects);
+            boolean hasDdl = false;
+            for (String ddl : ddls) {
+                if (ddl != null) {
+                    hasDdl = true;
+                    break;
                 }
-                if (ddl == null || ddl.trim().isEmpty()) {
-                    skipped += 1;
-                    continue;
-                }
-                ddls.put(object[1] + "." + object[0], ddl.trim());
             }
-            if (ddls.isEmpty() && !objects.isEmpty()) {
-                System.err.println("所有对象的 DDL 均读取失败（共 " + objects.size() + " 个，跳过 " + skipped + " 个）");
+            if (!hasDdl && !objects.isEmpty()) {
+                System.err.println("所有对象的 DDL 均读取失败（共 " + objects.size() + " 个）");
                 System.exit(4);
             }
         }
 
         StringBuilder out = new StringBuilder("[");
         boolean first = true;
-        for (String[] object : objects) {
-            String ddl = ddls.get(object[1] + "." + object[0]);
+        for (int index = 0; index < objects.size(); index++) {
+            String[] object = objects.get(index);
+            String ddl = ddls[index];
             if (ddl == null) continue;
             if (!first) out.append(',');
             first = false;
@@ -136,12 +177,67 @@ public class ReadMysqlObjects {
         System.out.println(out.toString());
     }
 
+    private static String[] readDdls(Connection connection, String url, String user, String pass,
+                                     String database, List<String[]> objects) throws Exception {
+        String[] ddls = new String[objects.size()];
+        AtomicInteger cursor = new AtomicInteger();
+        AtomicInteger progress = new AtomicInteger();
+        System.err.println("PROGRESS 0/" + objects.size());
+        // Small reads use the catalog connection alone. Larger reads overlap network round trips.
+        int extraWorkers = Math.min(3, objects.size() / 8);
+        if (extraWorkers == 0) {
+            readDdlQueue(connection, database, objects, ddls, cursor, progress);
+            return ddls;
+        }
+
+        ExecutorService pool = Executors.newFixedThreadPool(extraWorkers);
+        List<Future<?>> workers = new ArrayList<Future<?>>();
+        try {
+            for (int worker = 0; worker < extraWorkers; worker++) {
+                workers.add(pool.submit(() -> {
+                    try (Connection workerConnection = DriverManager.getConnection(url, user, pass)) {
+                        readDdlQueue(workerConnection, database, objects, ddls, cursor, progress);
+                    } catch (java.sql.SQLException error) {
+                        // The catalog connection still drains the queue when extra sessions are unavailable.
+                        System.err.println("WARN: 无法使用额外读取连接: " + error.getMessage());
+                    }
+                }));
+            }
+            readDdlQueue(connection, database, objects, ddls, cursor, progress);
+            for (Future<?> worker : workers) worker.get();
+            return ddls;
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    private static void readDdlQueue(Connection connection, String database, List<String[]> objects,
+                                     String[] ddls, AtomicInteger cursor, AtomicInteger progress) {
+        int index;
+        while ((index = cursor.getAndIncrement()) < objects.size()) {
+            String[] object = objects.get(index);
+            try {
+                String ddl = showCreate(connection, object[1], database, object[0]);
+                if (ddl != null && !ddl.trim().isEmpty()) ddls[index] = ddl.trim();
+            } catch (Exception error) {
+                System.err.println("WARN: " + object[1] + " " + object[0] + " 读取失败: " + error.getMessage());
+            }
+            synchronized (progress) {
+                int done = progress.incrementAndGet();
+                System.err.println("PROGRESS " + done + "/" + objects.size());
+            }
+        }
+    }
+
     private static void collect(Connection connection, List<String[]> objects, String type, String sql,
                                 String database, int limit) throws Exception {
-        try (java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
+        int remaining = limit - objects.size();
+        if (remaining <= 0) return;
+        try (java.sql.PreparedStatement statement = connection.prepareStatement(sql + " limit ?")) {
             statement.setString(1, database);
+            statement.setInt(2, remaining);
             try (ResultSet rows = statement.executeQuery()) {
-                while (rows.next() && objects.size() < limit) {
+                while (rows.next()) {
                     objects.add(new String[] { rows.getString(1), type });
                 }
             }
@@ -154,6 +250,7 @@ public class ReadMysqlObjects {
      */
     private static List<String[]> orderTablesByDependencies(Connection connection, String database, List<String[]> tables)
             throws Exception {
+        if (tables.size() < 2) return tables;
         Map<String, java.util.Set<String>> references = new LinkedHashMap<String, java.util.Set<String>>();
         for (String[] table : tables) references.put(table[0], new java.util.LinkedHashSet<String>());
         try (java.sql.PreparedStatement statement = connection.prepareStatement(

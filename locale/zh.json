@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "PLSQL Studio",
-    "description": "PLSQL Studio 把 Oracle 与 MySQL 的函数、存储过程、包、视图、触发器、建表脚本与查询转换为瀚高 HGDB V9 语法。顶栏「项目总览 / 任务中心 / 任务详情 / 连接管理」标签切换，支持深浅色主题。项目总览展示转换链路与趋势；任务中心按任务跟踪获取、转换、执行进度；任务详情提供源→目标编辑器与转换结果；连接管理整页维护源端（Oracle / MySQL）与目标端（HGDB-V9-PostgreSQL / HGDB-V9-Oracle / HGDB-V9-MySQL）连接。",
+    "title": "HGDB Convert Studio",
+    "description": "HGDB Convert Studio 把 Oracle / MySQL / SQL Server 的函数、存储过程、包、视图、触发器、建表脚本与查询转换为瀚高 HGDB V9 语法。顶栏「项目总览 / 任务中心 / 任务详情 / 连接管理」标签切换，支持深浅色主题。项目总览展示转换链路与趋势；任务中心按任务跟踪获取、转换、执行进度；任务详情提供源→目标编辑器与转换结果；连接管理整页维护源端（Oracle / MySQL）与目标端（HGDB-V9-PostgreSQL / HGDB-V9-Oracle / HGDB-V9-MySQL）连接。",
     "detail": "docs/DETAIL.md"
   }
 }

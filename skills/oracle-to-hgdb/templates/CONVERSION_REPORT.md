@@ -3,7 +3,7 @@
 - 转换日期：YYYY-MM-DD
 - 源库：Oracle <版本>，schema：<OWNER>
 - 目标库：HGDB V9，schema：<schema>
-- 执行人 / 智能体：plsqlstudio
+- 执行人 / 智能体：hgdb-convert-studio
 - 输入：<目录 / 文件 / 抽取方式>
 
 ## 1. 概览

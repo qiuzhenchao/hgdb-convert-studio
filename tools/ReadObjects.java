@@ -76,11 +76,13 @@ public class ReadObjects {
         final Map<String, String> jobDdls = new LinkedHashMap<String, String>();
         try (Connection connection = DriverManager.getConnection(url, user, pass)) {
             java.util.Set<String> mviewNames = new java.util.HashSet<String>();
-            try (PreparedStatement mviews = connection.prepareStatement(
-                    "select mview_name from all_mviews where owner = ?")) {
-                mviews.setString(1, owner);
-                try (ResultSet rows = mviews.executeQuery()) {
-                    while (rows.next()) mviewNames.add(rows.getString(1));
+            if (typeList.contains("TABLE")) {
+                try (PreparedStatement mviews = connection.prepareStatement(
+                        "select mview_name from all_mviews where owner = ?")) {
+                    mviews.setString(1, owner);
+                    try (ResultSet rows = mviews.executeQuery()) {
+                        while (rows.next()) mviewNames.add(rows.getString(1));
+                    }
                 }
             }
             StringBuilder marks = new StringBuilder();
@@ -105,6 +107,7 @@ public class ReadObjects {
                     + " and object_name not like '%$%'"
                     + " order by object_type, object_name";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setFetchSize(Math.min(limit, 100));
                     int index = 1;
                     statement.setString(index++, owner);
                     for (String type : typeList) statement.setString(index++, type);
@@ -138,6 +141,9 @@ public class ReadObjects {
         }
 
         final String[] ddls = new String[objects.size()];
+        final int totalObjects = objects.size();
+        final AtomicInteger progress = new AtomicInteger(0);
+        System.err.println("PROGRESS 0/" + totalObjects);
         final AtomicInteger cursor = new AtomicInteger(0);
         final int workerCount = Math.min(workers, Math.max(1, objects.size()));
         final CountDownLatch latch = new CountDownLatch(workerCount);
@@ -147,14 +153,21 @@ public class ReadObjects {
             pool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPass)) {
+                    try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPass);
+                         CallableStatement call = connection.prepareCall("{ ? = call dbms_metadata.get_ddl(?,?,?) }")) {
+                        call.registerOutParameter(1, Types.CLOB);
+                        call.setString(4, owner);
                         int index;
                         while ((index = cursor.getAndIncrement()) < objects.size()) {
                             String[] object = objects.get(index);
                             if ("JOB".equals(object[1])) {
                                 ddls[index] = jobDdls.get(object[0]);
                             } else {
-                                ddls[index] = ddlOf(connection, object[1], object[0], owner);
+                                ddls[index] = ddlOf(call, object[1], object[0]);
+                            }
+                            int done = progress.incrementAndGet();
+                            if (done == totalObjects || done % 5 == 0) {
+                                System.err.println("PROGRESS " + done + "/" + totalObjects);
                             }
                         }
                     } catch (Throwable ignored) {
@@ -218,18 +231,21 @@ public class ReadObjects {
         return value == null ? "" : value.replace("'", "''");
     }
 
-    private static String ddlOf(Connection connection, String type, String name, String owner) {
+    private static String ddlOf(CallableStatement call, String type, String name) {
         String metadataType = type.replace(' ', '_');
-        try (CallableStatement call = connection.prepareCall("{ ? = call dbms_metadata.get_ddl(?,?,?) }")) {
-            call.registerOutParameter(1, Types.CLOB);
+        try {
             call.setString(2, metadataType);
             call.setString(3, name);
-            call.setString(4, owner);
             call.execute();
             Clob clob = call.getClob(1);
             if (clob == null) return null;
-            long length = clob.length();
-            String value = clob.getSubString(1, (int) Math.min(length, 800000));
+            String value;
+            try {
+                long length = clob.length();
+                value = clob.getSubString(1, (int) Math.min(length, 800000));
+            } finally {
+                clob.free();
+            }
             if (value == null) return null;
             value = value.trim();
             if ("PACKAGE".equals(type)) {

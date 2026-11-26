@@ -1,5 +1,5 @@
 # extract-oracle.ps1
-# 用本机 SQL*Plus 从 Oracle 源库抽取 DDL/PLSQL，输出到目录，供 plsqlstudio 智能体转换。
+# 用本机 SQL*Plus 从 Oracle 源库抽取 DDL/PLSQL，输出到目录，供 hgdb-convert-studio 智能体转换。
 #
 # 用法：
 #   .\extract-oracle.ps1 -Connection "scott/tiger@10.0.0.10:1521/ORCLPDB1" -Owner SCOTT -OutDir "D:\migration\src"
@@ -41,7 +41,7 @@ if ($code -ne 0) {
   Write-Warning "sqlplus 退出码 $code，请检查输出与 $OutDir 下的文件。"
 } else {
   Get-ChildItem -LiteralPath $OutDir -File | Select-Object Name, Length | Format-Table -AutoSize
-  Write-Host "== 完成。下一步：让 plsqlstudio 智能体转换该目录。"
+  Write-Host "== 完成。下一步：让 hgdb-convert-studio 智能体转换该目录。"
 }
 
 exit $code

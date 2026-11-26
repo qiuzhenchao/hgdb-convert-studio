@@ -79,7 +79,7 @@ $func$;
 5. **SELECT INTO 严格性**：PG 默认 `SELECT INTO` 零行不报错、多行取第一行；Oracle 抛 `NO_DATA_FOUND`/`TOO_MANY_ROWS`。依赖异常的代码要加 `STRICT`。
 6. **函数里不能 COMMIT**：PG 函数禁止事务控制；过程（`CALL`）可以，但在显式事务块内 `COMMIT` 会报错。Oracle 过程里的提交要重新设计。
 7. **自治事务**：PG 无 `PRAGMA AUTONOMOUS_TRANSACTION`；用 dblink/`postgres_fdw` 回环、`pg_background`、或「写入队列表 + 独立消费者」替代；HGDB 兼容模式是否支持必须探测。
-8. **标识符大小写**：Oracle 未加引号折叠为大写，PG 折叠为小写。统一小写；保留字（`user`、`order`、`type`、`desc`、`limit`、`level`、`comment` 等）才加双引号，并保持所有引用一致。
+8. **标识符大小写**：Oracle 未加引号折叠为大写，PG 折叠为小写。带引号名在两种 HGDB 形态下表现不同：Oracle 兼容实例（`ivorysql_ora`，如 15219）按 Oracle 规则把引号内折成大写再做大小写不敏感匹配，`"TEST"."FN_X"` 实际落到 `test.fn_x`（同一对象），而 `"test"."FN_X"` 反而报 `schema "TEST" does not exist`；PG 形态实例（如 5432）严格按 PG 规则，`"TEST"."FN_X"` 直接报 `schema "TEST" does not exist`。小写无引号在两种形态下都可用，因此 schema 与对象名一律输出小写、不加双引号，兼容模式也一样；保留字（`user`、`order`、`type`、`desc`、`limit`、`level`、`comment` 等）才加双引号，并保持所有引用一致。
 9. **NUMBER 精度与隐式转换**：`NUMBER(38)` 映射成 `bigint` 可能溢出，应 `numeric`；Oracle 隐式 `'123'→123` 在 PG 里可能直接报错，调用点要显式 `::numeric`。
 10. **包级状态与会话**：包变量是会话级；PG 用 GUC/临时表模拟后，连接池复用、事务回滚、`DISCARD ALL` 都会影响它，必须写进报告。
 

@@ -10,6 +10,10 @@ node_modules/
 *.bak
 *~
 
+# Java 编译产物
+*.class
+tools/classes/
+
 # 编辑器 / 操作系统
 .vscode/
 .idea/
